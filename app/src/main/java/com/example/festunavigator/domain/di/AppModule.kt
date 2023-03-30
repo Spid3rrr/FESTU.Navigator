@@ -1,6 +1,10 @@
 package com.example.festunavigator.domain.di
 
+import android.R.string
 import android.app.Application
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.room.Room
 import com.example.festunavigator.data.data_source.Database
 import com.example.festunavigator.data.ml.classification.TextAnalyzer
@@ -12,12 +16,22 @@ import com.example.festunavigator.domain.pathfinding.Pathfinder
 import com.example.festunavigator.domain.repository.GraphRepository
 import com.example.festunavigator.domain.repository.RecordsRepository
 import com.example.festunavigator.domain.tree.Tree
+import com.example.festunavigator.domain.tree.Tree.Companion.TAG
 import com.example.festunavigator.domain.use_cases.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.io.BufferedReader
+import java.io.IOException
 import javax.inject.Singleton
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -30,8 +44,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(app: Application): Database {
         return Room.databaseBuilder(app, Database::class.java, DATABASE_NAME)
-            //The line below makes a pre-prepared database to be inserted from the file nodes.db
-            //.createFromAsset(DATABASE_DIR)
+            .createFromAsset(DATABASE_DIR)
             .allowMainThreadQueries()
             .addMigrations()
             .build()
@@ -40,7 +53,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideGraphRepository(database: Database): GraphRepository {
-        return GraphImpl(database)
+        return GraphImpl()
     }
 
     @Provides
